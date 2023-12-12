@@ -1,6 +1,7 @@
 ﻿#Before Starting 
 # Install packages
 install.packages(c("dplyr", "ggplot2", "gridExtra", "tidyr", "car", "lmtest", "corrplot", "psych"))
+install.packages(c("psych", "gmodels", "car"))
 
 
 # Load packages
