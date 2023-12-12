@@ -1,6 +1,6 @@
 ﻿#Before Starting 
 # Install packages
-install.packages(c("dplyr", "ggplot2", "gridExtra", "tidyr", "car", "lmtest", "corrplot"))
+install.packages(c("dplyr", "ggplot2", "gridExtra", "tidyr", "car", "lmtest", "corrplot", "psych"))
 
 
 # Load packages
