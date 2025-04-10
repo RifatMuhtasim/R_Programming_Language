@@ -1,0 +1,198 @@
+#Install Packages
+#install.packages("ggplot2")
+#install.packages("car")
+#install.packages("psych")
+library('ggplot2')
+library('car')
+library('psych')
+
+
+#### Dataset
+
+student_df <- data.frame(
+  Subject= 1:14,
+  GPA= c(3.8, 4.0, 3.2, 3.5, 2.5, 3.0, 2.1, 2.8, 3.6, 4.0, 3.6, 3.4, 3.2, 2.0),
+  Adaptability= c(45, 50, 45, 51, 60, 39, 42, 41, 46, 50, 53, 47, 48, 40),
+  Self_Confidence = c(60, 10, 50, 25, 15, 80, 41, 14, 57, 68, 24, 95, 25, 36),
+  IQ = c(105, 109, 102, 95, 92, 101, 99, 95, 94, 110, 104, 105, 98, 75),
+  Gender = c("Female", "Female", "Female", "Female", "Male" , "Male", "Male", "Female", "Female", "Female", "Female", "Female", "Male", "Male"),
+  Economic_Condition = c("Good", "Good", "Poor", "Good", 'Poor', 'Middle', 'Poor', 'Poor', 'Middle', 'Good', 'Good', 'Middle', 'Middle', 'Poor')
+)
+head(student_df)
+
+student_df_encoded <- student_df
+student_df_encoded$Gender <- ifelse(student_df_encoded$Gender == "Female", 1, 2)
+student_df_encoded$Economic_Condition <- ifelse(student_df_encoded$Economic_Condition== "Poor", 1, ifelse(student_df_encoded$Economic_Condition== "Middle", 2, 3))
+head(student_df_encoded)
+
+
+
+
+#### 1.1. Normality test for continuous data
+data <- student_df$GPA 
+shapiro_result <- shapiro.test(data)
+cat("Shapiro-Wilk Result Value is:", shapiro_result$statistic)
+cat("Shapiro-Wilk test P-Value is:", shapiro_result$p.value)
+if (shapiro_result$p.value <= 0){
+  cat("\nReject Null Hypothesis. The data is not normally distributed.")
+} else {
+  cat("\nFail to Reject Null Hypothesis. This data is normally distributed.")
+}
+qqPlot(data, main="Q-Q Plot for IQ", ylab="IQ")
+
+
+
+
+#### 1.2. Linear regression for GPA
+gpa_model <- lm(GPA ~ Adaptability + Self_Confidence + IQ + Gender + Economic_Condition, data= student_df_encoded)
+summary(gpa_model)
+
+
+
+
+#### 1.3. Logistic Regression for Gender
+gender_model <- glm(Gender ~ GPA + Adaptability + Self_Confidence + IQ, data= student_df_encoded)
+summary(gender_model)
+
+economic_model <- glm(Self_Confidence ~ Gender + Economic_Condition, data= student_df)
+summary(economic_model)
+
+
+
+
+#### 1.4. Cronbach's Alpha
+dataset <- student_df_encoded[, c("GPA", "Economic_Condition")]
+alpha = psych::alpha(dataset)
+cat("Cronbach Alpha Value:", alpha$total$raw_alpha)
+
+
+
+
+
+
+
+#### 1.i) Identify Influential Factors of academic performance of students.
+summary(gpa_model)
+
+
+
+
+#### 1.ii) Is there any variation of academic performance with respect to gender and economic condition.
+#For Gender
+ttest_result <- t.test(GPA ~ Gender, data= student_df)
+cat("TTest Value is:", ttest_result$statistic)
+cat("TTest P-Value is:", ttest_result$p.value)
+if (ttest_result$p.value <= 0.05){
+  cat("Reject Null Hypothesis. There is a significant difference between them.")
+} else {
+  cat("Fail to Reject Null Hypothesis. There is no difference")
+}
+print(ttest_result)
+
+#ANOVA 
+anova_result <- aov(GPA ~ Economic_Condition, data= student_df)
+print(summary(anova_result))
+
+tukey_test <- TukeyHSD(anova_result)
+print(tukey_test)
+
+
+
+
+
+#### 2.i) Using the best fitted model, forecast the production and consumption of tea in Bangladesh.
+production_df <- data.frame(
+  Year = 2010:2021,
+  Production_thousands_kg = c(60.04, 59.13, 62.52, 66.26, 63.88, 67.38, 85.95, 78.95, 82.13, 96.07, 86.39, 96.51),
+  Consumption_thousands_kg = c(57.63, 58.50, 61.19, 64.00, 67.17, 77.57, 81.64, 85.93, 90.45, 65.20, 95.02, 65.24)
+)
+tail(production_df)
+
+prod_model <- lm(Production_thousands_kg ~ Year, data= production_df)
+cons_model <- lm(Consumption_thousands_kg ~ Year, data= production_df)
+summary(prod_model)
+summary(cons_model)
+future_years <- data.frame(Year= c(2022, 2023, 2024))
+prod_predict <- predict(prod_model, newdata = future_years)
+cons_predict <- predict(cons_model, newdata = future_years)
+cat("Production Prediction:", prod_predict)
+cat("Consumption Prediction:", cons_predict)
+
+
+
+
+
+#### 2. ii) Is there any significant relationship between production and consumption
+corr_result <- cor.test(production_df$Production_thousands_kg, production_df$Consumption_thousands_kg)
+cat("Correlation value is:", corr_result$estimate)
+if (corr_result$p.value <= 0.05){
+  cat("Reject Null Hypothesis. There is a diffrence")
+} else {
+  cat("Fail to Reject Null Hypothesis. There is no difference")
+}
+
+
+
+
+
+
+
+
+##### 2025 Question solve
+#### a) State the background characteristics of the respondents by displaying a percent frequency distribution table.
+head(person_df)
+cat_columns <- c("Gender", "Family_Type", "Smoking_Habit", "Disease_Suffering", "Psychological_Stress")
+
+# Loop through columns and print frequency distribution
+for (col in cat_columns) {
+  cat("\nFrequency Distribution for", col, ":\n")
+  freq_dist <- prop.table(table(person_df[[col]])) * 100
+  print(freq_dist)
+}
+
+
+
+
+#### b) Explore the influential factors affecting on IQ of the respondents by applying multiple linear regression model.
+model <- lm(IQ ~ Age + Height_in_inch + BMI , data= person_df)
+summary(model)
+
+person_df_encoded <- person_df
+person_df_encoded$Smoking_Habit <- ifelse(person_df_encoded$Smoking_Habit == "Yes", 1, 0)
+person_df_encoded$Disease_Suffering <- ifelse(person_df_encoded$Disease_Suffering == "Yes", 1, 0)
+person_df_encoded$Psychological_Stress <- ifelse(person_df_encoded$Psychological_Stress == "Yes", 1, 0)
+person_df_encoded
+
+model2 <- lm(IQ ~ Age + Height_in_inch + BMI + Smoking_Habit + Disease_Suffering + Psychological_Stress , data= person_df)
+summary(model2)
+
+
+
+
+#### c) Determine the variation of IQ with respect to background characteristic.
+ggplot(person_df, aes(x= Psychological_Stress, y= IQ)) + geom_boxplot() + theme_minimal()
+ggplot(person_df, aes(x= Smoking_Habit, y= IQ)) + geom_boxplot() + theme_minimal()
+
+
+
+
+#### d) Determine the factor affecting on psychological stress of the respondents.
+model <- lm(Psychological_Stress ~ Height_in_inch + IQ + BMI)
+summary(model)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
